@@ -1,27 +1,36 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 public class Graph
 {
     public List<List<Connection>> connections = new List<List<Connection>>();
 
     public void PopulateGraph()
     {
+        int layerMask = 1 << 8;
+        layerMask = ~layerMask;
         GameObject pathNodes = GameObject.Find("PathNodes");
         foreach (Transform child in pathNodes.transform)
         {
+        //Transform child = pathNodes.transform.GetChild(0);
             int num = getIndex(child.gameObject.name);
             List<Connection> localConnections = new List<Connection>();
             foreach (Transform node in pathNodes.transform)
             {
-                float direction = Vector3.Angle(child.position, node.position);
                 float distance  = Vector3.Distance(child.position, node.position);
-
-                // If no collision between the object and node
-                if (!Physics.Raycast(child.position, new Vector3(0, direction, 0), distance))
+                node.GetComponent<MeshRenderer>().material.color = Color.red;
+                //Debug.Log("Direction and Distance: " + (node.position - child.position + " " + distance + " to " + node.name));
+                // If no collision between the child and node
+                if (!Physics.Raycast(child.position, node.position - child.position, distance))
                 {
+                    Debug.DrawLine(child.position, node.position, Color.yellow, 999);
                     localConnections.Add(new Connection(distance, num, getIndex(node.name)));
+                    //Debug.Log("Did not hit a wall");
+                }
+                else
+                {
+                    //Debug.DrawLine(child.position, node.position, Color.red, 999);
+                    //Debug.Log("Hit a wall");
                 }
             }
             connections.Add(localConnections);
@@ -30,7 +39,7 @@ public class Graph
 
     private int getIndex(string name)
     {
-        return int.Parse(name.Substring(name.IndexOf("("), name.IndexOf(")")));
+        return int.Parse(name.Substring(name.IndexOf("(")+1, name.IndexOf(")")- name.IndexOf("(")-1));
     }
 }
 

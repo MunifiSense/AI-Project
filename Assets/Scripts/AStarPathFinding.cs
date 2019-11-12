@@ -18,22 +18,23 @@ public class AStarPathFinding
         PriorityQueue open = new PriorityQueue();
         PriorityQueue closed = new PriorityQueue();
         open.Insert(startRecord);
+        NodeRecord current = new NodeRecord();
         while (open.length() > 0)
         {
-            NodeRecord current = open.Top();
-            if(current.node == end)
+            current = open.Top();
+            if (current.node == end)
             {
                 break;
             }
             List<Connection> currConnections = graph.connections[current.node];
-            foreach(Connection connect in currConnections)
+            foreach (Connection connect in currConnections)
             {
                 int endNode = connect.toNode;
                 float endNodeCost = current.costSoFar + connect.cost;
                 if (closed.Contains(endNode))
                 {
                     NodeRecord endNodeRecord = closed.Find(endNode);
-                    if(endNodeRecord.costSoFar <= endNodeCost)
+                    if (endNodeRecord.costSoFar <= endNodeCost)
                     {
                         continue;
                     }
@@ -43,7 +44,7 @@ public class AStarPathFinding
                 {
                     NodeRecord endNodeRecord = open.Find(endNode);
 
-                    if(endNodeRecord.costSoFar <= endNodeCost)
+                    if (endNodeRecord.costSoFar <= endNodeCost)
                     {
                         continue;
                     }
@@ -60,20 +61,21 @@ public class AStarPathFinding
                 open.Remove(current.node);
                 closed.Insert(current);
             }
-            if(current.node != end)
+        }
+        List<Connection> list = new List<Connection>();
+        if (current.node != end)
+        {
+            return null;
+        }
+        else
+        {
+            while (current.node != start)
             {
-                return null;
-            }
-            else
-            {
-                List<Connection> list = new List<Connection>();
-                while (current.node != start)
-                {
-                    list.Insert(0, current.conn);
-                    current = closed.Find(current.conn.fromNode);
-                }
+                list.Insert(0, current.conn);
+                current = closed.Find(current.conn.fromNode);
             }
         }
+        return list;
     }
 
     public float Heuristic(int node, int end)
