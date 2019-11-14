@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Code adapted from pseudocode in Artificial Intelligence for Games textbook
 public class PriorityQueue
 {
     private List<NodeRecord> list = new List<NodeRecord>();
 
+    // Checks if list is empty
     public bool IsEmpty()
     {
         return list.Count == 0;
@@ -19,7 +21,7 @@ public class PriorityQueue
     }
 
     // Returns element with highest priority
-    public NodeRecord Top()
+    public NodeRecord smallestElement()
     {
         NodeRecord smallest = new NodeRecord();
         float currValue = float.MaxValue;
@@ -34,28 +36,13 @@ public class PriorityQueue
         return smallest;
     }
 
-    // Deletes the element with highest priority
-    public void Pop()
-    {
-        NodeRecord smallest = new NodeRecord();
-        float currValue = float.MaxValue;
-        for (int i = 0; i < list.Count; i++)
-        {
-            if (list[0].estimatedTotalCost < currValue)
-            {
-                currValue = list[0].estimatedTotalCost;
-                smallest = list[0];
-            }
-        }
-        list.Remove(smallest);
-    }
-
     // Deletes an element from the list
     public void Remove(int node)
     {
         list.Remove(list.Find(x => x.node == node));
     }
 
+    // Checks if list contains node
     public bool Contains(int node)
     {
         foreach(NodeRecord item in list)
@@ -68,14 +55,10 @@ public class PriorityQueue
         return false;
     }
 
+    // Finds the node
     public NodeRecord Find(int node)
     {
         return list.Find(x => x.node == node);
-    }
-
-    public int length()
-    {
-        return list.Count;
     }
 }
 

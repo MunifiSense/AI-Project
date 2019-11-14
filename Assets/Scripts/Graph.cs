@@ -23,7 +23,7 @@ public class Graph
                 // If no collision between the child and node
                 if (!Physics.Raycast(child.position, node.position - child.position, distance))
                 {
-                    Debug.DrawLine(child.position, node.position, Color.yellow, 999);
+                    //Debug.DrawLine(child.position, node.position, Color.yellow, 999);
                     localConnections.Add(new Connection(distance, num, getIndex(node.name)));
                     //Debug.Log("Did not hit a wall");
                 }
@@ -40,6 +40,25 @@ public class Graph
     private int getIndex(string name)
     {
         return int.Parse(name.Substring(name.IndexOf("(")+1, name.IndexOf(")")- name.IndexOf("(")-1));
+    }
+
+    public void DrawConnections(int node)
+    {
+        GameObject pathNodes = GameObject.Find("PathNodes");
+        foreach (Connection connect in connections[node])
+        {
+            Debug.DrawLine(pathNodes.transform.GetChild(connect.fromNode).position, 
+                pathNodes.transform.GetChild(connect.toNode).position, 
+                Color.yellow, 999);
+        }
+    }
+
+    public void DrawConnection(Connection connect)
+    {
+        GameObject pathNodes = GameObject.Find("PathNodes");
+        Debug.DrawLine(pathNodes.transform.GetChild(connect.fromNode).position,
+            pathNodes.transform.GetChild(connect.toNode).position,
+            Color.yellow, 999);
     }
 }
 

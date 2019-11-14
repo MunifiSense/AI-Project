@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Code adapted from pseudocode in Artificial Intelligence for Games textbook
+
 public class AStarPathFinding
 {
     Graph graph;
@@ -12,25 +14,39 @@ public class AStarPathFinding
         graph.PopulateGraph();
     }
 
-    public List<Connection> FindPath(int start, int end)
+    public Path FindPath(int start, int end)
     {
-        NodeRecord startRecord = new NodeRecord(0, 0, 0);
+        int maxLoops = 9999;
+        int loop = -1;
+        NodeRecord startRecord = new NodeRecord(start, 0, 0);
         PriorityQueue open = new PriorityQueue();
         PriorityQueue closed = new PriorityQueue();
         open.Insert(startRecord);
         NodeRecord current = new NodeRecord();
-        while (open.length() > 0)
+        while (!open.IsEmpty())
         {
-            current = open.Top();
+            loop++;
+            if(loop > maxLoops)
+            {
+                Debug.Log("Infinite loop!");
+                break;
+            }
+            current = open.smallestElement();
+            //Debug.Log("Current Node: " + current.node);
+            // If we reached the goal
             if (current.node == end)
             {
                 break;
             }
+
             List<Connection> currConnections = graph.connections[current.node];
             foreach (Connection connect in currConnections)
             {
+                //graph.DrawConnection(connect);
                 int endNode = connect.toNode;
                 float endNodeCost = current.costSoFar + connect.cost;
+
+                // Connected node is in closed
                 if (closed.Contains(endNode))
                 {
                     NodeRecord endNodeRecord = closed.Find(endNode);
@@ -40,6 +56,7 @@ public class AStarPathFinding
                     }
                     closed.Remove(endNode);
                 }
+                // Connected node is in open
                 else if (open.Contains(endNode))
                 {
                     NodeRecord endNodeRecord = open.Find(endNode);
@@ -50,37 +67,38 @@ public class AStarPathFinding
                     }
 
                 }
+                // Unvisited node
                 else
                 {
                     NodeRecord endNodeRecord = new NodeRecord();
                     endNodeRecord.node = endNode;
                     endNodeRecord.conn = connect;
-                    endNodeRecord.estimatedTotalCost = endNodeCost + Heuristic(current.node, endNode);
-                }
+                    endNodeRecord.costSoFar = endNodeCost;
+                    endNodeRecord.estimatedTotalCost = endNodeCost + Heuristic(endNode, end);
 
-                open.Remove(current.node);
-                closed.Insert(current);
+                    open.Insert(endNodeRecord);
+                }
             }
+            open.Remove(current.node);
+            closed.Insert(current);
         }
-        List<Connection> list = new List<Connection>();
-        if (current.node != end)
-        {
-            return null;
-        }
-        else
+        Path path = new Path();
+        if(current.node == end)
         {
             while (current.node != start)
             {
-                list.Insert(0, current.conn);
+                path.list.Insert(0, current.conn);
                 current = closed.Find(current.conn.fromNode);
             }
         }
-        return list;
+        return path;
     }
 
+    // Heuristic function (just distance from a to b)
     public float Heuristic(int node, int end)
     {
         GameObject pathNodes = GameObject.Find("PathNodes");
         return Vector3.Distance(pathNodes.transform.GetChild(node).position, pathNodes.transform.GetChild(end).position);
     }
+
 }
