@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+// Code adapted from pseudocode in the Artificial Intelligence for Games textbook
 public class Path
 {
     public List<Connection> list;

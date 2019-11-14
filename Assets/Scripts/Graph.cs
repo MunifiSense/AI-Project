@@ -18,7 +18,7 @@ public class Graph
             foreach (Transform node in pathNodes.transform)
             {
                 float distance  = Vector3.Distance(child.position, node.position);
-                node.GetComponent<MeshRenderer>().material.color = Color.red;
+                //node.GetComponent<MeshRenderer>().material.color = Color.red;
                 //Debug.Log("Direction and Distance: " + (node.position - child.position + " " + distance + " to " + node.name));
                 // If no collision between the child and node
                 if (!Physics.Raycast(child.position, node.position - child.position, distance))
