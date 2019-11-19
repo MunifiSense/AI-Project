@@ -15,13 +15,15 @@ public class Path
 
     public void CalcParams()
     {
-        float param = 0;
+        float param = 0.0f;
+        nodeParam.Add(param);
         GameObject pathNodes = GameObject.Find("PathNodes");
         foreach (Connection connection in list)
         {
-            nodeParam.Add(param);
             param += Vector3.Distance(pathNodes.transform.GetChild(connection.fromNode).position,
             pathNodes.transform.GetChild(connection.toNode).position);
+            nodeParam.Add(param);
+            Debug.Log("Connection from " + connection.fromNode + " to " + connection.toNode + " Param: " + param);
         }
     }
 
@@ -54,6 +56,7 @@ public class Path
     {
         float distance = float.MaxValue;
         int closestNode = 0;
+        int closestNodeParam = 0;
         int closestNodeTo = 0;
         GameObject pathNodes = GameObject.Find("PathNodes");
         for(int i = 0; i < list.Count; i++)
@@ -67,8 +70,9 @@ public class Path
                 {
                     distance = distanceFrom;
                     closestNode = list[i].toNode;
+                    closestNodeParam = i;
                 }
-                return nodeParam[closestNode];
+                return nodeParam[closestNodeParam];
             }
             else if (Vector3.Distance(position, pathNodes.transform.GetChild(list[i].fromNode).position) <= distance)
             {
@@ -79,7 +83,7 @@ public class Path
         }
         Vector3 nearestPoint = NearestPointOnFiniteLine(pathNodes.transform.GetChild(closestNode).position,
             pathNodes.transform.GetChild(closestNodeTo).position, position);
-        return nodeParam[closestNode] + Vector3.Distance(pathNodes.transform.GetChild(closestNode).position, nearestPoint);
+        return nodeParam[closestNodeParam] + Vector3.Distance(pathNodes.transform.GetChild(closestNode).position, nearestPoint);
     }
 
     public Vector3 getPosition(float param)
@@ -97,7 +101,9 @@ public class Path
                 distance = param - nodeParam[i];
             }
         }
-        return Vector3.Lerp(pathNodes.transform.GetChild(closestNode).position, 
+        Vector3 pos = Vector3.Lerp(pathNodes.transform.GetChild(closestNode).position,
             pathNodes.transform.GetChild(closestNodeTo).position, distance);
+        Debug.Log("Position:" + pos);
+        return pos;
     }
 }

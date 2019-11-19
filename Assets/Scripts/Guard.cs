@@ -7,6 +7,8 @@ public class Guard : MonoBehaviour
     public float maxSpeed = 1;
     public float radius = 1;
     public float slowRadius = 2;
+    //public float predictTime = 0.1f;
+    public float pathOffset = 0.1f;
     public Vector3 velocity;
     public Vector3 rotation;
     public Vector3 linear;
@@ -14,13 +16,16 @@ public class Guard : MonoBehaviour
     public float maxAcceleration = 1;
     public float maxAngularAcceleration = 1;
     public float maxRotation = 180;
+    private Path path;
     // Start is called before the first frame update
     void Start()
     {
         AStarPathFinding a = new AStarPathFinding();
-        Path path = a.FindPath(0, 16);
+        path = a.FindPath(0, 16);
+        path.CalcParams();
         // Drawing path for debugging
         path.DrawPath();
+
     }
 
     void Update()
@@ -31,7 +36,7 @@ public class Guard : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        gameObject.transform.position = velocity * Time.fixedDeltaTime;
+        gameObject.transform.position = gameObject.transform.position + velocity * Time.fixedDeltaTime;
         gameObject.transform.localEulerAngles = rotation * Time.fixedDeltaTime;
 
         velocity += linear * Time.fixedDeltaTime;
@@ -42,16 +47,23 @@ public class Guard : MonoBehaviour
             velocity.Normalize();
             velocity *= maxSpeed;
         }
+
+        FollowPath(path, pathOffset);
     }
 
-    void FollowPath()
+    void FollowPath(Path path, float pathOffset)
     {
-
+        float currentParam;
+        Vector3 futurePos = gameObject.transform.position + velocity * Time.fixedDeltaTime;
+        currentParam = path.getParam(futurePos);
+        float targetParam = currentParam + pathOffset;
+        Vector3 targetPos = path.getPosition(targetParam);
+        Seek(targetPos);
     }
 
-    void Seek(Transform target)
+    void Seek(Vector3 target)
     {
-        Vector3 linearCalc = target.position - gameObject.transform.position;
+        Vector3 linearCalc = target - gameObject.transform.position;
 
         linearCalc.Normalize();
         linearCalc *= maxSpeed;
