@@ -7,15 +7,17 @@ public class Guard : MonoBehaviour
     public float maxSpeed = 1;
     public float radius = 1;
     public float slowRadius = 2;
+    public float radiusRotate = 10;
+    public float slowRadiusRotate = 30;
     //public float predictTime = 0.1f;
-    public float pathOffset = 0.1f;
+    public float pathOffset = 1.0f;
     public Vector3 velocity;
     public Vector3 rotation;
     public Vector3 linear;
     public Vector3 angular;
     public float maxAcceleration = 1;
-    public float maxAngularAcceleration = 1;
-    public float maxRotation = 180;
+    public float maxAngularAcceleration = 30;
+    public float maxRotation = 5;
     private Path path;
     // Start is called before the first frame update
     void Start()
@@ -25,7 +27,6 @@ public class Guard : MonoBehaviour
         path.CalcParams();
         // Drawing path for debugging
         path.DrawPath();
-
     }
 
     void Update()
@@ -36,17 +37,19 @@ public class Guard : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        gameObject.transform.position = gameObject.transform.position + velocity * Time.fixedDeltaTime;
-        gameObject.transform.localEulerAngles = rotation * Time.fixedDeltaTime;
+        gameObject.transform.position += velocity * Time.fixedDeltaTime;
+        //gameObject.GetComponent<CharacterController>().SimpleMove(velocity);
+        gameObject.transform.localEulerAngles = GetNewOrientation();
+        //gameObject.transform.localEulerAngles += rotation * Time.fixedDeltaTime;
 
         velocity += linear * Time.fixedDeltaTime;
-        rotation += angular * Time.fixedDeltaTime;
+        //rotation +=   angular * Time.fixedDeltaTime;
 
-        if(velocity.magnitude > maxSpeed)
+        /*if(velocity.magnitude > maxSpeed)
         {
             velocity.Normalize();
             velocity *= maxSpeed;
-        }
+        }*/
 
         FollowPath(path, pathOffset);
     }
@@ -58,7 +61,8 @@ public class Guard : MonoBehaviour
         currentParam = path.getParam(futurePos);
         float targetParam = currentParam + pathOffset;
         Vector3 targetPos = path.getPosition(targetParam);
-        Seek(targetPos);
+        Arrive(targetPos);
+        //LookWhereYoureGoing();
     }
 
     void Seek(Vector3 target)
@@ -70,20 +74,45 @@ public class Guard : MonoBehaviour
         linear = linearCalc;
     }
 
-    void Align(Transform target)
+    void LookWhereYoureGoing()
     {
-        Vector3 rotationCalc = target.localEulerAngles - gameObject.transform.localEulerAngles;
-        while(rotationCalc.y > 180)
+        if(velocity.magnitude == 0)
         {
-            rotationCalc.y -= 180;
+            angular = Vector3.zero;
+            rotation = Vector3.zero;
         }
-        while(rotationCalc.y < -180)
+        else
         {
-            rotationCalc.y += 180;
+            Vector3 target = new Vector3(0, Mathf.Atan2(-velocity.x, velocity.z)*Mathf.Rad2Deg, 0);
+            //Debug.Log("Target: " + target);
+            Align(target);
         }
+    }
+
+    void Align(Vector3 target)
+    {
+        Vector3 rotationCalc = target - gameObject.transform.localEulerAngles;
+        if(rotationCalc.y > 180)
+        {
+            rotationCalc.y -= 360;
+        }
+        if (rotationCalc.y < -180)
+        {
+            rotationCalc.y += 360;
+        }
+        rotation = rotationCalc;
+        Debug.Log(rotation);
         float rotationSize = Mathf.Abs(rotationCalc.y);
         Vector3 targetRotation;
-        if(!(rotationSize < radius))
+
+        //Debug.Log("rotationSize: " + rotationSize + " radiusRotate: " + radiusRotate);
+
+        if (rotationSize < radiusRotate)
+        {
+            angular = Vector3.zero;
+            rotation = Vector3.zero;
+        }
+        else
         {
             if(rotationSize > slowRadius)
             {
@@ -91,12 +120,15 @@ public class Guard : MonoBehaviour
             }
             else
             {
-                targetRotation = new Vector3(0, maxRotation, 0) * rotationSize / slowRadius;
+                targetRotation = new Vector3(0, maxRotation, 0) * rotationSize / slowRadiusRotate;
             }
 
-            targetRotation *= rotationCalc.y / rotationSize;
+            targetRotation *= rotationCalc.y / rotationSize; 
+
+            Debug.Log("TargetRotation: " + targetRotation);
 
             Vector3 angularCalc = targetRotation - gameObject.transform.localEulerAngles;
+            angularCalc /= Time.fixedDeltaTime;
 
             float angularAcceleration = Mathf.Abs(angularCalc.y);
             if(angularAcceleration > maxAngularAcceleration)
@@ -109,14 +141,21 @@ public class Guard : MonoBehaviour
         }
     }
 
-    void Arrive(Transform target)
+    void Arrive(Vector3 target)
     {
-        Vector3 direction = target.position - gameObject.transform.position;
+        Vector3 direction = target - gameObject.transform.position;
         float distance = direction.magnitude;
-        if(!(distance < radius))
+
+        // If we are at target
+        if (distance < radius)
+        {
+            linear = Vector3.zero;
+            velocity = Vector3.zero;
+        }
+        else
         {
             float targetSpeed;
-            if(distance > slowRadius)
+            if (distance > slowRadius)
             {
                 targetSpeed = maxSpeed;
             }
@@ -129,9 +168,11 @@ public class Guard : MonoBehaviour
             targetVelocity.Normalize();
             targetVelocity *= targetSpeed;
 
+
             Vector3 linearCalc = targetVelocity - velocity;
-            
-            if(linearCalc.magnitude > maxAcceleration)
+            linearCalc /= Time.fixedDeltaTime;
+
+            if (linearCalc.magnitude > maxAcceleration)
             {
                 linearCalc.Normalize();
                 linearCalc *= maxAcceleration;
@@ -141,12 +182,12 @@ public class Guard : MonoBehaviour
         }
     }
     
-    private float GetNewOrientation(float currentOrientation, Vector3 velocity)
+    private Vector3 GetNewOrientation()
     {
         if(velocity.magnitude > 0)
         {
-            return Mathf.Atan2(-velocity.x, -velocity.z);
+            return new Vector3(0, Mathf.Atan2(-velocity.x, -velocity.z)*Mathf.Rad2Deg, 0);
         }
-        return currentOrientation;
+        return gameObject.transform.localEulerAngles;
     }
 }

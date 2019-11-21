@@ -23,7 +23,7 @@ public class Path
             param += Vector3.Distance(pathNodes.transform.GetChild(connection.fromNode).position,
             pathNodes.transform.GetChild(connection.toNode).position);
             nodeParam.Add(param);
-            Debug.Log("Connection from " + connection.fromNode + " to " + connection.toNode + " Param: " + param);
+            //Debug.Log("Connection from " + connection.fromNode + " to " + connection.toNode + " Param: " + param);
         }
     }
 
@@ -59,11 +59,12 @@ public class Path
         int closestNodeParam = 0;
         int closestNodeTo = 0;
         GameObject pathNodes = GameObject.Find("PathNodes");
+        // Find closest node
         for(int i = 0; i < list.Count; i++)
         {
             float distanceFrom = Vector3.Distance(position, pathNodes.transform.GetChild(list[i].fromNode).position);
             // If last connection
-            if (i == list.Count - 1)
+            /*if (i == list.Count - 1)
             {
                 distanceFrom = Vector3.Distance(position, pathNodes.transform.GetChild(list[i].toNode).position);
                 if (distanceFrom <= distance)
@@ -71,16 +72,20 @@ public class Path
                     distance = distanceFrom;
                     closestNode = list[i].toNode;
                     closestNodeParam = i;
+                    Debug.Log(nodeParam[closestNodeParam]);
+                    return nodeParam[closestNodeParam+1];
                 }
-                return nodeParam[closestNodeParam];
             }
-            else if (Vector3.Distance(position, pathNodes.transform.GetChild(list[i].fromNode).position) <= distance)
+            else*/
+            if (distanceFrom <= distance)
             {
                 distance = distanceFrom;
                 closestNode = list[i].fromNode;
                 closestNodeTo = list[i].toNode;
+                closestNodeParam = i;
             }
         }
+        //Debug.Log("Closest: " + closestNode + " ClosestNodeTo: " + closestNodeTo);
         Vector3 nearestPoint = NearestPointOnFiniteLine(pathNodes.transform.GetChild(closestNode).position,
             pathNodes.transform.GetChild(closestNodeTo).position, position);
         return nodeParam[closestNodeParam] + Vector3.Distance(pathNodes.transform.GetChild(closestNode).position, nearestPoint);
@@ -94,16 +99,18 @@ public class Path
         float distance = float.MaxValue;
         for (int i = 0; i < list.Count; i++)
         {
-            if(param - nodeParam[i] < distance)
+            if(Mathf.Abs(param - nodeParam[i]) < distance)
             {
+                //Debug.Log("param - nodeParam[i] = " + param + " - " + nodeParam[i]);
                 closestNode = list[i].fromNode;
                 closestNodeTo = list[i].toNode;
-                distance = param - nodeParam[i];
+                distance = Mathf.Abs(param - nodeParam[i]);
             }
         }
+        //Debug.Log("Closest: " + closestNode + " ClosestNodeTo: " + closestNodeTo);
         Vector3 pos = Vector3.Lerp(pathNodes.transform.GetChild(closestNode).position,
             pathNodes.transform.GetChild(closestNodeTo).position, distance);
-        Debug.Log("Position:" + pos);
+        //Debug.Log("Param: " + param + " Position: " + pos);
         return pos;
     }
 }
