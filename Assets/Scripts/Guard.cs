@@ -19,14 +19,27 @@ public class Guard : MonoBehaviour
     public float maxAngularAcceleration = 30;
     public float maxRotation = 5;
     private Path path;
+
+    // State machine
+    StateMachine stateMachine;
+
+    // Decision Tree
+    Decision decisionTreeRoot;
+
     // Start is called before the first frame update
     void Start()
     {
+        // State Machine Setup
+        
+        // Decision Tree setup
+        
+
         AStarPathFinding a = new AStarPathFinding();
         path = a.FindPath(0, 16);
         path.CalcParams();
         // Drawing path for debugging
         path.DrawPath();
+
     }
 
     void Update()
@@ -43,6 +56,8 @@ public class Guard : MonoBehaviour
         //gameObject.transform.localEulerAngles += rotation * Time.fixedDeltaTime;
 
         velocity += linear * Time.fixedDeltaTime;
+
+        gameObject.GetComponentInChildren<Animator>().SetFloat("Forward", velocity.magnitude);
         //rotation +=   angular * Time.fixedDeltaTime;
 
         /*if(velocity.magnitude > maxSpeed)
