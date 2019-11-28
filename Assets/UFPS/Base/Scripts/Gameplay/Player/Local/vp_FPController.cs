@@ -141,6 +141,7 @@ public class vp_FPController : vp_CharacterController
 			m_Trigger = new GameObject("Trigger");
 			m_Trigger.transform.parent = m_Transform;
 			m_Trigger.layer = vp_Layer.LocalPlayer;
+            m_Trigger.tag = "Player";
 			m_Trigger.transform.localPosition = Vector3.zero;
 
 			m_TriggerCollider = m_Trigger.AddComponent<CapsuleCollider>();

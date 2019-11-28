@@ -18,7 +18,14 @@ public class Guard : MonoBehaviour
     public float maxAcceleration = 1;
     public float maxAngularAcceleration = 30;
     public float maxRotation = 5;
+
+    public float viewDistance = 10;
+    public float viewAngle = 110;
+    public bool playerInSight;
+    public Vector3 playerLastSighting;
+
     private Path path;
+    private GameObject player;
 
     // State machine
     StateMachine stateMachine;
@@ -29,6 +36,8 @@ public class Guard : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        player = GameObject.FindGameObjectWithTag("Player");
+        playerInSight = false;
         // State Machine Setup
         
         // Decision Tree setup
@@ -44,7 +53,12 @@ public class Guard : MonoBehaviour
 
     void Update()
     {
-        
+        if (playerInSight)
+        {
+            Debug.Log("Player detected!!");
+
+            // Trigger alert state
+        }
     }
 
     // Update is called once per frame
@@ -67,6 +81,39 @@ public class Guard : MonoBehaviour
         }*/
 
         FollowPath(path, pathOffset);
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        playerInSight = false;
+        if (other.gameObject.tag == "Player")
+        {
+            //Debug.Log("Player in trigger");
+
+
+            // Vision
+            Vector3 targetDir = player.transform.position - transform.position;
+            float angle = Vector3.Angle(targetDir, -transform.forward);
+
+            //Debug.Log("angle = " + angle);
+
+            // Is player in field of view
+            if (angle < viewAngle * 0.5f)
+            {
+                //Debug.Log("Player in angle");
+                RaycastHit hit;
+
+                if (Physics.Raycast(transform.position + transform.up, targetDir.normalized, 
+                    out hit, GetComponent<BoxCollider>().size.z, LayerMask.GetMask("LocalPlayer")))
+                {
+                    if(hit.collider.gameObject.name == "Trigger")
+                    {
+                        playerInSight = true;
+                        playerLastSighting = hit.collider.gameObject.transform.position;
+                    }
+                }
+            }
+        }
     }
 
     void FollowPath(Path path, float pathOffset)
