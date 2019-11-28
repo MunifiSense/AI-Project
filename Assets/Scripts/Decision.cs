@@ -20,9 +20,9 @@ public class Decision : DecisionTreeNode {
     }
 }
 
-public class DecisionAction
+public class DecisionAction : DecisionTreeNode
 {
-    public DecisionAction MakeDecision() => this;
+    public new DecisionAction MakeDecision() => this;
 }
 
 // Virtual function for decisions
@@ -43,16 +43,16 @@ public class FloatDecision : Decision {
     float minValue;
     float maxValue;
 
-    float testValue;
+    //float testValue;
 
-    public FloatDecision(float minValue, float maxValue, float testValue)
+    public FloatDecision(float minValue, float maxValue)
     {
         this.minValue = minValue;
         this.maxValue = maxValue;
-        this.testValue = testValue;
+        //this.testValue = testValue;
     }
 
-    public new Decision GetBranch()
+    public Decision GetBranch(float testValue)
     {
         if((minValue <= testValue) && (testValue <= maxValue))
         {

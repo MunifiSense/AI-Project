@@ -92,12 +92,12 @@ public class Transition
     State targetState;
     List<string> actions;
 
-    public Transition(Condition cond, State targetState, List<string> actions)
+    /*public Transition(Condition cond, State targetState, List<string> actions)
     {
         this.cond = cond;
         this.targetState = targetState;
         this.actions = actions;
-    }
+    }*/
 
     public bool IsTriggered()
     {

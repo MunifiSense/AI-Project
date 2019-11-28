@@ -34,18 +34,18 @@ public class TargetState : Decision
     }
 }
 
-public class DecisionTreeTransition
+public class DecisionTreeTransition : Transition
 {
     TargetState targetState;
 
     Decision decisionTreeRoot;
 
-    public bool IsTriggered()
+    public new bool IsTriggered()
     {
         targetState = (TargetState) targetState.MakeDecision(decisionTreeRoot);
         return targetState != null;
     }
-    public State GetTargetState()
+    public new State GetTargetState()
     {
         if(targetState != null)
         {
@@ -55,7 +55,7 @@ public class DecisionTreeTransition
         return null;
     }
 
-    public List<string> GetAction()
+    public new List<string> GetAction()
     {
         if (targetState != null)
         {
