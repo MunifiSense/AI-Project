@@ -8,9 +8,7 @@ public class Condition
     {
         return false;
     }
-}
-
-public class FloatCondition: Condition {
+}public class FloatCondition: Condition {
     float minValue;
     float maxValue;
 

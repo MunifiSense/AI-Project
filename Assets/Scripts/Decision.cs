@@ -4,19 +4,30 @@ using UnityEngine;
 
 // Virtual function for decisions
 public class Decision : DecisionTreeNode {
-    public Decision trueNode;
-    public Decision falseNode;
-    public bool testValue;
+    public Guard guard;
+    public DecisionTreeNode trueNode;
+    public DecisionTreeNode falseNode;
 
-    public new Decision GetBranch()
+    public Decision(Guard guard)
+    {
+        this.guard = guard;
+        this.trueNode = null;
+        this.falseNode = null;
+    }
+
+    public new DecisionTreeNode GetBranch()
     {
         return null;
     }
 
-    public new Decision MakeDecision()
+    public new DecisionTreeNode MakeDecision()
     {
-        Decision branch = GetBranch();
-        return branch.MakeDecision();
+        return null;
+    }
+
+    public bool Test()
+    {
+        return false;
     }
 }
 
@@ -27,34 +38,98 @@ public class DecisionAction : DecisionTreeNode
 
 // Virtual function for decisions
 public class DecisionTreeNode {
-
-    public Decision GetBranch()
+    public DecisionTreeNode MakeDecision()
     {
         return null;
     }
-
-    public void MakeDecision()
-    {
-
-    }
 }
 
-public class FloatDecision : Decision {
+/*public class FloatDecision : Decision {
     float minValue;
     float maxValue;
 
     //float testValue;
 
-    public FloatDecision(float minValue, float maxValue)
-    {
-        this.minValue = minValue;
-        this.maxValue = maxValue;
-        //this.testValue = testValue;
-    }
-
-    public Decision GetBranch(float testValue)
+    public DecisionTreeNode GetBranch(float testValue)
     {
         if((minValue <= testValue) && (testValue <= maxValue))
+        {
+            return trueNode;
+        }
+        return falseNode;
+    }
+}*/
+
+// Is the player in sight?
+public class SpottedDecision : Decision
+{
+    public SpottedDecision(Guard guard) : base(guard)
+    {
+        this.guard = guard;
+        this.trueNode = null;
+        this.falseNode = null;
+    }
+
+    public new DecisionTreeNode GetBranch()
+    {
+        if (guard.playerInSight)
+        {
+            return trueNode;
+        }
+        return falseNode;
+    }
+}
+
+// Is the player nearby?
+public class NearbyDecision : Decision {
+    public NearbyDecision(Guard guard) : base(guard)
+    {
+        this.guard = guard;
+        this.trueNode = null;
+        this.falseNode = null;
+    }
+
+    public new DecisionTreeNode GetBranch()
+    {
+        if (guard.playerNearby)
+        {
+            return trueNode;
+        }
+        return falseNode;
+    }
+}
+
+// Is the player aggressive?
+public class AggressiveDecision : Decision {
+    public AggressiveDecision(Guard guard) : base(guard)
+    {
+        this.guard = guard;
+        this.trueNode = null;
+        this.falseNode = null;
+    }
+
+    public new DecisionTreeNode GetBranch()
+    {
+        if (guard.playerAggressive)
+        {
+            return trueNode;
+        }
+        return falseNode;
+    }
+}
+
+// Is there backup nearby?
+public class BackupDecision : Decision {
+    public BackupDecision(Guard guard) : base(guard)
+    {
+        this.guard = guard;
+        this.trueNode = null;
+        this.falseNode = null;
+    }
+
+    public new DecisionTreeNode GetBranch()
+    {
+        if (guard.haveBackup)
         {
             return trueNode;
         }

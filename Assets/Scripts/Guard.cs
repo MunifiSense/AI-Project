@@ -21,8 +21,16 @@ public class Guard : MonoBehaviour
 
     public float viewDistance = 10;
     public float viewAngle = 110;
+
+    // For decision making
     public bool playerInSight;
+    public bool playerNearby;
+    public bool playerAggressive;
+    public bool haveBackup;
     public Vector3 playerLastSighting;
+
+    public int patrolFrom;
+    public int patrolTo;
 
     private Path path;
     private GameObject player;
@@ -41,10 +49,8 @@ public class Guard : MonoBehaviour
         // State Machine Setup
         
         // Decision Tree setup
-        
 
-        AStarPathFinding a = new AStarPathFinding();
-        path = a.FindPath(0, 16);
+        path = AStarPathFinding.FindPath(0, 16);
         path.CalcParams();
         // Drawing path for debugging
         path.DrawPath();
@@ -58,6 +64,21 @@ public class Guard : MonoBehaviour
             Debug.Log("Player detected!!");
 
             // Trigger alert state
+        }
+    }
+
+    public void GuardActions(string action)
+    {
+        switch (action)
+        {
+            case "patrol":
+                if(Patrol(patrolFrom, patrolTo))
+                {
+                    int temp = patrolFrom;
+                    patrolFrom = patrolTo;
+                    patrolTo = temp;
+                }
+                break;
         }
     }
 
@@ -116,14 +137,14 @@ public class Guard : MonoBehaviour
         }
     }
 
-    void FollowPath(Path path, float pathOffset)
+    bool FollowPath(Path path, float pathOffset)
     {
         float currentParam;
         Vector3 futurePos = gameObject.transform.position + velocity * Time.fixedDeltaTime;
         currentParam = path.getParam(futurePos);
         float targetParam = currentParam + pathOffset;
         Vector3 targetPos = path.getPosition(targetParam);
-        Arrive(targetPos);
+        return Arrive(targetPos);
         //LookWhereYoureGoing();
     }
 
@@ -203,7 +224,7 @@ public class Guard : MonoBehaviour
         }
     }
 
-    void Arrive(Vector3 target)
+    bool Arrive(Vector3 target)
     {
         Vector3 direction = target - gameObject.transform.position;
         float distance = direction.magnitude;
@@ -213,6 +234,7 @@ public class Guard : MonoBehaviour
         {
             linear = Vector3.zero;
             velocity = Vector3.zero;
+            return true;
         }
         else
         {
@@ -242,6 +264,7 @@ public class Guard : MonoBehaviour
 
             linear = linearCalc;
         }
+        return false;
     }
     
     private Vector3 GetNewOrientation()
@@ -251,5 +274,14 @@ public class Guard : MonoBehaviour
             return new Vector3(0, Mathf.Atan2(-velocity.x, -velocity.z)*Mathf.Rad2Deg, 0);
         }
         return gameObject.transform.localEulerAngles;
+    }
+
+    private bool Patrol(int from, int to)
+    {
+        path = AStarPathFinding.FindPath(from, to);
+        path.CalcParams();
+        // Drawing path for debugging
+        //path.DrawPath();
+        return FollowPath(path, pathOffset);
     }
 }

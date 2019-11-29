@@ -52,11 +52,15 @@ public class StateMachine
 
 public class State
 {
-    List<string> actions;
-    List<string> entryActions;
-    List<string> exitActions;
-    List<Transition> transitions;
+    public List<string> actions;
+    public List<string> entryActions;
+    public List<string> exitActions;
+    public List<Transition> transitions;
 
+    public State()
+    {
+
+    }
     public State(List<string> actions, List<string> entryActions, List<string> exitActions, List<Transition> transitions)
     {
         this.actions = actions;
@@ -86,18 +90,38 @@ public class State
     }
 }
 
+public class AttackState : State {
+
+    public AttackState()
+    {
+        this.actions = new List<string>(new string[] { "attack" });
+        this.entryActions = new List<string>(new string[] { });
+        this.exitActions = new List<string>(new string[] { });
+
+
+        this.transitions = new List<Transition>(new Transition[] { });
+    }
+
+
+}
+
 public class Transition
 {
     Condition cond;
     State targetState;
     List<string> actions;
 
-    /*public Transition(Condition cond, State targetState, List<string> actions)
+    public Transition()
+    {
+
+    }
+
+    public Transition(Condition cond, State targetState, List<string> actions)
     {
         this.cond = cond;
         this.targetState = targetState;
         this.actions = actions;
-    }*/
+    }
 
     public bool IsTriggered()
     {

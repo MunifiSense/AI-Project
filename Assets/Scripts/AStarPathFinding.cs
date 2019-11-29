@@ -6,16 +6,10 @@ using UnityEngine;
 
 public class AStarPathFinding
 {
-    Graph graph;
-
-    public AStarPathFinding()
+    public static Path FindPath(int start, int end)
     {
-        graph = new Graph();
+        Graph graph = new Graph();
         graph.PopulateGraph();
-    }
-
-    public Path FindPath(int start, int end)
-    {
         int maxLoops = 9999;
         int loop = -1;
         NodeRecord startRecord = new NodeRecord(start, 0, 0);
@@ -95,7 +89,7 @@ public class AStarPathFinding
     }
 
     // Heuristic function (just distance from a to b)
-    public float Heuristic(int node, int end)
+    public static float Heuristic(int node, int end)
     {
         GameObject pathNodes = GameObject.Find("PathNodes");
         return Vector3.Distance(pathNodes.transform.GetChild(node).position, pathNodes.transform.GetChild(end).position);
