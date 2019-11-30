@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Code based off Artificial Intelliegence for Games textbook
+// Decision Trees
+
 // Virtual function for decisions
 public class Decision : DecisionTreeNode {
     public Guard guard;
-    public DecisionTreeNode trueNode;
-    public DecisionTreeNode falseNode;
+    public Decision trueNode;
+    public Decision falseNode;
 
     public Decision(Guard guard)
     {
@@ -15,12 +18,12 @@ public class Decision : DecisionTreeNode {
         this.falseNode = null;
     }
 
-    public new DecisionTreeNode GetBranch()
+    public virtual Decision GetBranch()
     {
         return null;
     }
 
-    public new DecisionTreeNode MakeDecision()
+    public new virtual Decision MakeDecision()
     {
         return null;
     }
@@ -38,27 +41,11 @@ public class DecisionAction : DecisionTreeNode
 
 // Virtual function for decisions
 public class DecisionTreeNode {
-    public DecisionTreeNode MakeDecision()
+    public virtual DecisionTreeNode MakeDecision()
     {
         return null;
     }
 }
-
-/*public class FloatDecision : Decision {
-    float minValue;
-    float maxValue;
-
-    //float testValue;
-
-    public DecisionTreeNode GetBranch(float testValue)
-    {
-        if((minValue <= testValue) && (testValue <= maxValue))
-        {
-            return trueNode;
-        }
-        return falseNode;
-    }
-}*/
 
 // Is the player in sight?
 public class SpottedDecision : Decision
@@ -70,13 +57,25 @@ public class SpottedDecision : Decision
         this.falseNode = null;
     }
 
-    public new DecisionTreeNode GetBranch()
+    public override Decision GetBranch()
     {
+        //Debug.Log("Is the player in sight?");
         if (guard.playerInSight)
         {
+            //Debug.Log("Player in sight");
             return trueNode;
         }
         return falseNode;
+    }
+
+    public override Decision MakeDecision()
+    {
+        Decision branch = GetBranch();
+        if(branch is null)
+        {
+            return branch;
+        }
+        return branch.MakeDecision();
     }
 }
 
@@ -89,13 +88,25 @@ public class NearbyDecision : Decision {
         this.falseNode = null;
     }
 
-    public new DecisionTreeNode GetBranch()
+    public override Decision GetBranch()
     {
+        //Debug.Log("Is the player nearby?");
         if (guard.playerNearby)
         {
             return trueNode;
         }
+        //Debug.Log("Player not nearby " + ((TargetState) falseNode).state);
         return falseNode;
+    }
+
+    public override Decision MakeDecision()
+    {
+        Decision branch = GetBranch();
+        if (branch is null)
+        {
+            return branch;
+        }
+        return branch.MakeDecision();
     }
 }
 
@@ -108,13 +119,24 @@ public class AggressiveDecision : Decision {
         this.falseNode = null;
     }
 
-    public new DecisionTreeNode GetBranch()
+    public override Decision GetBranch()
     {
+        //Debug.Log("Is the player aggressive?");
         if (guard.playerAggressive)
         {
             return trueNode;
         }
         return falseNode;
+    }
+
+    public override Decision MakeDecision()
+    {
+        Decision branch = GetBranch();
+        if (branch is null)
+        {
+            return branch;
+        }
+        return branch.MakeDecision();
     }
 }
 
@@ -127,12 +149,23 @@ public class BackupDecision : Decision {
         this.falseNode = null;
     }
 
-    public new DecisionTreeNode GetBranch()
+    public override Decision GetBranch()
     {
+        //Debug.Log("Is there backup?");
         if (guard.haveBackup)
         {
             return trueNode;
         }
         return falseNode;
+    }
+
+    public override Decision MakeDecision()
+    {
+        Decision branch = GetBranch();
+        if (branch is null)
+        {
+            return branch;
+        }
+        return branch.MakeDecision();
     }
 }

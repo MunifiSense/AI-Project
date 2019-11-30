@@ -2,139 +2,208 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StateMachine
-{
-    List<State> states;
-    State initialState;
-    State currentState;
-    
-    public StateMachine(List<State> states, State initialState, State currentState)
+// Code loosely based off Artificial Intelliegence for Games textbook
+// State machine that has Decision Trees as transitions
+
+public class StateMachine {
+    //List<State> states;
+    public Guard guard;
+    public State initialState;
+    public State currentState;
+
+    public StateMachine(Guard guard, State state)
     {
-        this.states = states;
-        this.initialState = initialState;
-        this.currentState = initialState;
+        //this.states = states;
+        this.guard = guard;
+        this.initialState = state;
+        this.currentState = state;
     }
 
-    public List<string> Update()
+    public void Update()
     {
-
-        Transition triggeredTransition = null;
-
-        foreach(Transition transition in currentState.GetTransitions())
+        if (currentState.transition.IsTriggered())
         {
-            if (transition.IsTriggered())
+            currentState.OnStateExit();
+            switch((currentState.transition.GetState().state))
             {
-                triggeredTransition = transition;
+                case "attack":
+                    currentState = new AttackState(guard);
+                    break;
+                case "alarm":
+                    currentState = new AlarmState(guard);
+                    break;
+                case "wait":
+                    currentState = new BackupState(guard);
+                    break;
+                case "patrol":
+                    currentState = new PatrolState(guard);
+                    break;
             }
-
-            if(triggeredTransition != null)
-            {
-                State targetState = triggeredTransition.GetTargetState();
-
-                List<string> actions = currentState.GetEntryAction();
-                foreach(string action in triggeredTransition.GetAction())
-                {
-                    actions.Add(action);
-                }
-                foreach (string action in targetState.GetEntryAction())
-                {
-                    actions.Add(action);
-                }
-
-                currentState = targetState;
-                return actions;
-            }
+            currentState.OnStateEnter();
         }
-        //Otherwise return current state's actions
-        return currentState.GetAction();
     }
 }
 
-public class State
+public class State : Decision
 {
-    public List<string> actions;
-    public List<string> entryActions;
-    public List<string> exitActions;
-    public List<Transition> transitions;
+    public string action;
+    public Transition transition;
 
-    public State()
+    public State(Guard guard) : base(guard)
     {
-
-    }
-    public State(List<string> actions, List<string> entryActions, List<string> exitActions, List<Transition> transitions)
-    {
-        this.actions = actions;
-        this.entryActions = entryActions;
-        this.exitActions = exitActions;
-        this.transitions = transitions;
+        this.guard = guard;
+        this.action = "";
+        this.transition = null;
     }
 
-    public List<string> GetAction()
+    public virtual void OnStateEnter() { }
+    public virtual void OnStateExit() { }
+
+    // We hit a state, so return the state
+    public override Decision MakeDecision()
     {
-        return actions;
+        return this;
+    }
+}
+
+public class PatrolState : State
+{
+    public PatrolState(Guard guard) : base(guard)
+    {
+        this.guard = guard;
+        this.action = "patrol";
+
+        // Patrol Decision Tree
+        AggressiveDecision a = new AggressiveDecision(guard);
+        a.trueNode = new TargetState(guard, "alarm");
+        a.falseNode = new TargetState(guard, "attack");
+
+        NearbyDecision b = new NearbyDecision(guard);
+        b.trueNode = a;
+        b.falseNode = new TargetState(guard, "alarm");
+        //Debug.Log(((TargetState) b.falseNode).state);
+
+        SpottedDecision c = new SpottedDecision(guard);
+        c.trueNode = b;
+        c.falseNode = null;
+
+        Decision tree = c;
+
+        this.transition = new Transition(tree);
     }
 
-    public List<string> GetEntryAction()
+    public override void OnStateEnter()
     {
-        return entryActions;
+        guard.FindPath(guard.patrolFrom, guard.patrolTo);
+    }
+    public override void OnStateExit() { }
+}
+
+public class AlarmState : State {
+    public AlarmState(Guard guard) : base(guard)
+    {
+        this.guard = guard;
+        this.action = "alarm";
+
+        // Alarm Decision Tree
+        BackupDecision d = new BackupDecision(guard);
+        d.trueNode = new TargetState(guard, "attack");
+        d.falseNode = new TargetState(guard, "wait");
+        AggressiveDecision e = new AggressiveDecision(guard);
+        e.trueNode = d;
+        e.falseNode = new PatrolState(guard);
+
+        Decision tree = e;
+
+        this.transition = new Transition(tree);
     }
 
-    public List<string> GetExitAction()
-    {
-        return exitActions;
-    }
-
-    public List<Transition> GetTransitions()
-    {
-        return transitions;
-    }
+    public override void OnStateEnter() { }
+    public override void OnStateExit() { }
 }
 
 public class AttackState : State {
-
-    public AttackState()
+    public AttackState(Guard guard) : base(guard)
     {
-        this.actions = new List<string>(new string[] { "attack" });
-        this.entryActions = new List<string>(new string[] { });
-        this.exitActions = new List<string>(new string[] { });
+        this.guard = guard;
+        this.action = "attack";
+        // Attack Tree
+        SpottedDecision g = new SpottedDecision(guard);
+        g.trueNode = null;
+        g.falseNode = new TargetState(guard, "patrol");
 
+        Decision tree = g;
 
-        this.transitions = new List<Transition>(new Transition[] { });
+        this.transition = new Transition(tree);
     }
 
-
+    public override void OnStateEnter() { }
+    public override void OnStateExit() { }
 }
 
-public class Transition
-{
-    Condition cond;
-    State targetState;
-    List<string> actions;
-
-    public Transition()
+public class BackupState : State {
+    public BackupState(Guard guard) : base(guard)
     {
+        this.guard = guard;
+        this.action = "wait";
 
+        // Backup Decision Tree
+        BackupDecision f = new BackupDecision(guard);
+        f.trueNode = new TargetState(guard, "attack");
+        f.falseNode = null;
+
+        Decision tree = f;
+
+        this.transition = new Transition(tree);
     }
 
-    public Transition(Condition cond, State targetState, List<string> actions)
+    public override void OnStateEnter() { }
+    public override void OnStateExit() { }
+}
+
+public class TargetState : State {
+    public string state;
+
+    public TargetState(Guard guard, string state) : base(guard)
     {
-        this.cond = cond;
-        this.targetState = targetState;
-        this.actions = actions;
+        this.guard = guard;
+        this.state = state;
+    }
+}
+
+public class Transition {
+
+    Decision rootDecision;
+
+    public Transition(Decision tree)
+    {
+        rootDecision = tree;
     }
 
     public bool IsTriggered()
     {
-        return cond.Test();
+        TargetState resultNode = (TargetState) rootDecision.MakeDecision();
+        //Debug.Log(resultNode.state);
+        /*if(resultNode != null)
+        {
+            Debug.Log("Found Target State");
+        }
+        else
+        {
+            Debug.Log("No Target State");
+        }*/
+
+        return resultNode != null;
     }
 
-    public State GetTargetState()
+    public TargetState GetState()
     {
-        return targetState;
-    }
+        if (rootDecision.MakeDecision() is TargetState)
+        {
+            TargetState resultNode = (TargetState) rootDecision.MakeDecision();
+            return resultNode;
+        }
 
-    public List<string> GetAction()
-    {
-        return actions;
+        return null;
     }
 }

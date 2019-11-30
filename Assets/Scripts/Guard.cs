@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Guard AI main file
+
 public class Guard : MonoBehaviour
 {
     public float maxSpeed = 1;
@@ -35,25 +37,23 @@ public class Guard : MonoBehaviour
     private Path path;
     private GameObject player;
 
-    // State machine
-    StateMachine stateMachine;
-
-    // Decision Tree
-    Decision decisionTreeRoot;
+    // Decision Making
+    GuardDecisionMaking decisionMaking;
 
     // Start is called before the first frame update
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player");
         playerInSight = false;
-        // State Machine Setup
-        
-        // Decision Tree setup
+        decisionMaking = GetComponent<GuardDecisionMaking>();
 
-        path = AStarPathFinding.FindPath(0, 16);
+        // Generate patrol path
+        path = AStarPathFinding.FindPath(patrolFrom, patrolTo);
         path.CalcParams();
+        //path = AStarPathFinding.FindPath(0, 16);
+        //path.CalcParams();
         // Drawing path for debugging
-        path.DrawPath();
+        //path.DrawPath();
 
     }
 
@@ -65,6 +65,8 @@ public class Guard : MonoBehaviour
 
             // Trigger alert state
         }
+
+        GuardActions(decisionMaking.currentAction);
     }
 
     public void GuardActions(string action)
@@ -77,7 +79,15 @@ public class Guard : MonoBehaviour
                     int temp = patrolFrom;
                     patrolFrom = patrolTo;
                     patrolTo = temp;
+                    path = AStarPathFinding.FindPath(patrolFrom, patrolTo);
+                    path.CalcParams();
                 }
+                break;
+            case "alarm":
+                break;
+            case "attack":
+                break;
+            case "wait":
                 break;
         }
     }
@@ -276,12 +286,16 @@ public class Guard : MonoBehaviour
         return gameObject.transform.localEulerAngles;
     }
 
-    private bool Patrol(int from, int to)
+    public void FindPath(int from, int to)
     {
         path = AStarPathFinding.FindPath(from, to);
         path.CalcParams();
         // Drawing path for debugging
         //path.DrawPath();
+    }
+
+    private bool Patrol(int from, int to)
+    {
         return FollowPath(path, pathOffset);
     }
 }
