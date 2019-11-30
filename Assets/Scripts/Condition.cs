@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Based off Artificial Intelligence for Games textbook
+// Conditions for basic State Machines
+
 public class Condition
 {
     public bool Test()
     {
         return false;
     }
-}
-
-public class FloatCondition: Condition {
+}public class FloatCondition: Condition {
     float minValue;
     float maxValue;
 
