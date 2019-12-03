@@ -28,18 +28,43 @@ public class StateMachine {
             {
                 case "attack":
                     currentState = new AttackState(guard);
+                    //Debug.Log("Attack state");
                     break;
                 case "alarm":
                     currentState = new AlarmState(guard);
+                    //Debug.Log("Alarm state");
                     break;
                 case "wait":
                     currentState = new BackupState(guard);
+                    //Debug.Log("Wait state");
                     break;
                 case "patrol":
                     currentState = new PatrolState(guard);
+                    //Debug.Log("Patrol state");
                     break;
             }
             currentState.OnStateEnter();
+        }
+
+        switch (currentState.action)
+        {
+            case "patrol":
+                if (guard.Patrol(guard.patrolFrom, guard.patrolTo))
+                {
+                    int temp = guard.patrolFrom;
+                    guard.patrolFrom = guard.patrolTo;
+                    guard.patrolTo = temp;
+                    guard.FindPath(guard.patrolFrom, guard.patrolTo);
+                    //path.CalcParams();
+                }
+                break;
+            case "alarm":
+                // DEAL WITH ALARM CASE!!!!!!!
+                break;
+            case "attack":
+                break;
+            case "wait":
+                break;
         }
     }
 }
@@ -100,25 +125,40 @@ public class PatrolState : State
 }
 
 public class AlarmState : State {
+    int closestAlarm;
     public AlarmState(Guard guard) : base(guard)
     {
         this.guard = guard;
         this.action = "alarm";
-
+        closestAlarm = -1;
         // Alarm Decision Tree
         BackupDecision d = new BackupDecision(guard);
         d.trueNode = new TargetState(guard, "attack");
         d.falseNode = new TargetState(guard, "wait");
-        AggressiveDecision e = new AggressiveDecision(guard);
+        AlarmDecision e = new AlarmDecision(guard);
         e.trueNode = d;
-        e.falseNode = new PatrolState(guard);
+        e.falseNode = null;
 
         Decision tree = e;
 
         this.transition = new Transition(tree);
     }
 
-    public override void OnStateEnter() { }
+    public override void OnStateEnter()
+    {
+        float distance = float.MaxValue;
+        GameObject[] button = GameObject.FindGameObjectsWithTag("Button");
+        for(int i=0; i<button.Length; i++)
+        {
+            float buttonDistance = Vector3.Distance(guard.gameObject.transform.position, button[i].transform.position);
+            if (buttonDistance < distance)
+            {
+                distance = buttonDistance;
+                string name = button[i].name;
+                closestAlarm = int.Parse(name.Substring(name.IndexOf("(") + 1, name.IndexOf(")") - name.IndexOf("(") - 1));
+            }
+        }
+    }
     public override void OnStateExit() { }
 }
 

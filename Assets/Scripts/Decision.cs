@@ -169,3 +169,34 @@ public class BackupDecision : Decision {
         return branch.MakeDecision();
     }
 }
+
+// Is the alarm triggered?
+public class AlarmDecision : Decision
+{
+    public AlarmDecision(Guard guard) : base(guard)
+    {
+        this.guard = guard;
+        this.trueNode = null;
+        this.falseNode = null;
+    }
+
+    public override Decision GetBranch()
+    {
+        //Debug.Log("Is the alarm triggered?");
+        if (GameObject.Find("GameState").GetComponent<GameState>().Alarm())
+        {
+            return trueNode;
+        }
+        return falseNode;
+    }
+
+    public override Decision MakeDecision()
+    {
+        Decision branch = GetBranch();
+        if (branch is null)
+        {
+            return branch;
+        }
+        return branch.MakeDecision();
+    }
+}

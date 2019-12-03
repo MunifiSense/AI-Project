@@ -65,14 +65,15 @@ public class Guard : MonoBehaviour
         if (playerInSight)
         {
             Debug.Log("Player detected!!");
-
+            playerLastSighting = player.transform.position;
+            GameObject.Find("Node (42)").transform.position = playerLastSighting;
             // Trigger alert state
         }
 
-        GuardActions(decisionMaking.currentAction);
+        //GuardActions(decisionMaking.currentAction);
     }
 
-    public void GuardActions(string action)
+    /*public void GuardActions(string action)
     {
         switch (action)
         {
@@ -93,7 +94,7 @@ public class Guard : MonoBehaviour
             case "wait":
                 break;
         }
-    }
+    }*/
 
     // Update is called once per frame
     void FixedUpdate()
@@ -301,7 +302,33 @@ public class Guard : MonoBehaviour
         //path.DrawPath();
     }
 
-    private bool Patrol(int from, int to)
+    public void FindPathTo(int to)
+    {
+        path = AStarPathFinding.FindPath(FindClosestNode(), to);
+        path.CalcParams();
+        // Drawing path for debugging
+        //path.DrawPath();
+    }
+
+    public int FindClosestNode()
+    {
+        int closestNode = -1;
+        float closestDistance = float.MaxValue;
+        foreach(Transform child in GameObject.Find("PathNodes").transform)
+        {
+            float distance = Vector3.Distance(transform.position, child.transform.position);
+            if(distance < closestDistance)
+            {
+                closestDistance = distance;
+                string name = child.name;
+                closestNode = int.Parse(name.Substring(name.IndexOf("(") + 1, name.IndexOf(")") - name.IndexOf("(") - 1));
+            }
+        }
+
+        return closestNode;
+    }
+
+    public bool Patrol(int from, int to)
     {
         return FollowPath(path, pathOffset);
     }
