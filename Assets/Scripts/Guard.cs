@@ -27,6 +27,9 @@ public class Guard : MonoBehaviour
     // For decision making
     public bool playerInSight;
     public bool playerNearby;
+
+    // Naive Bayes Classifier
+    // Chance of getting shot at by player on sight > 80%
     public bool playerAggressive;
     public bool haveBackup;
     public Vector3 playerLastSighting;
@@ -79,8 +82,8 @@ public class Guard : MonoBehaviour
                     int temp = patrolFrom;
                     patrolFrom = patrolTo;
                     patrolTo = temp;
-                    path = AStarPathFinding.FindPath(patrolFrom, patrolTo);
-                    path.CalcParams();
+                    FindPath(patrolFrom, patrolTo);
+                    //path.CalcParams();
                 }
                 break;
             case "alarm":
@@ -154,6 +157,7 @@ public class Guard : MonoBehaviour
         currentParam = path.getParam(futurePos);
         float targetParam = currentParam + pathOffset;
         Vector3 targetPos = path.getPosition(targetParam);
+        //Debug.DrawLine(transform.position, targetPos, Color.magenta, 999);
         return Arrive(targetPos);
         //LookWhereYoureGoing();
     }
@@ -167,7 +171,7 @@ public class Guard : MonoBehaviour
         linear = linearCalc;
     }
 
-    void LookWhereYoureGoing()
+    /*void LookWhereYoureGoing()
     {
         if(velocity.magnitude == 0)
         {
@@ -232,7 +236,7 @@ public class Guard : MonoBehaviour
 
             angular = angularCalc;
         }
-    }
+    }*/
 
     bool Arrive(Vector3 target)
     {
@@ -242,8 +246,11 @@ public class Guard : MonoBehaviour
         // If we are at target
         if (distance < radius)
         {
-            linear = Vector3.zero;
+            angular = Vector3.zero;
+            rotation = Vector3.zero;
             velocity = Vector3.zero;
+            linear = Vector3.zero;
+            //path = null;
             return true;
         }
         else
@@ -298,4 +305,5 @@ public class Guard : MonoBehaviour
     {
         return FollowPath(path, pathOffset);
     }
+
 }

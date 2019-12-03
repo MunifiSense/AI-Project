@@ -182,7 +182,7 @@ public class Transition {
 
     public bool IsTriggered()
     {
-        TargetState resultNode = (TargetState) rootDecision.MakeDecision();
+        //TargetState resultNode = (TargetState) rootDecision.MakeDecision();
         //Debug.Log(resultNode.state);
         /*if(resultNode != null)
         {
@@ -193,7 +193,7 @@ public class Transition {
             Debug.Log("No Target State");
         }*/
 
-        return resultNode != null;
+        return rootDecision.MakeDecision() != null;
     }
 
     public TargetState GetState()
