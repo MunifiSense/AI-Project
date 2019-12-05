@@ -70,7 +70,7 @@ public class KeyDataRecord
 }
 
 // Code from StackOverflow
-// https://stackoverflow.com/questions/22173762/check-if-two-lists-are-equal
+// https://stackoverflow.com/questions/10020541/c-sharp-list-as-dictionary-key
 public class ListComparer<T> : IEqualityComparer<List<T>> {
     public bool Equals(List<T> x, List<T> y)
     {
