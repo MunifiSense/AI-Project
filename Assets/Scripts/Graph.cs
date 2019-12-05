@@ -21,10 +21,13 @@ public class Graph
                 //node.GetComponent<MeshRenderer>().material.color = Color.red;
                 //Debug.Log("Direction and Distance: " + (node.position - child.position + " " + distance + " to " + node.name));
                 // If no collision between the child and node
-                if (!Physics.Raycast(child.position, node.position - child.position, distance, ~LayerMask.GetMask("Player"), QueryTriggerInteraction.Ignore))
+                LayerMask mask = LayerMask.GetMask("Player");
+                mask |= (1 << LayerMask.NameToLayer("Enemy"));
+                mask = ~mask;
+                if (!Physics.Raycast(child.position, node.position - child.position, distance, mask, QueryTriggerInteraction.Ignore))
                 {
                     //Debug.DrawLine(child.position, node.position, Color.yellow, 999);
-                    localConnections.Add(new Connection(distance, num, getIndex(node.name)));
+                    localConnections.Add(new Connection(distance, num, getIndex(node.gameObject.name)));
                     //Debug.Log("Did not hit a wall");
                 }
                 else

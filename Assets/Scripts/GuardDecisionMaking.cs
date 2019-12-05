@@ -5,7 +5,7 @@ using UnityEngine;
 public class GuardDecisionMaking : MonoBehaviour
 {
     Guard guard;
-    StateMachine sm;
+    public StateMachine sm;
     public string currentAction;
     // Start is called before the first frame update
     void Start()

@@ -253,6 +253,15 @@ public class vp_DamageHandler : MonoBehaviour
 		if ((damageInfo.Type == vp_DamageInfo.DamageType.Bullet) && (m_Source == Transform))
 			return;
 
+        Guard guard = GetComponent<Guard>();
+        guard.playerInSight = true;
+
+        // Only register shot at if in attack phase
+        if(guard.GetComponent<GuardDecisionMaking>().sm.currentState.action == "attack")
+        {
+            guard.shotAt = true;
+        }
+
 		// --- damage will be inflicted ---
 
 		LastDamageTime = Time.time;

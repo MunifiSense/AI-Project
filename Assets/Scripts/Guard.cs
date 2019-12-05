@@ -27,14 +27,32 @@ public class Guard : MonoBehaviour
     // For decision making
     public bool playerInSight;
     public bool playerNearby;
+
+    // Naive Bayes Classifier
+    // Chance of getting shot at by player on sight > 80%
     public bool playerAggressive;
-    public bool haveBackup;
+
+    // Has the guard been shot at during this attack phase
+    public bool shotAt;
+
+    // Has the player been spotted during this attack phase
+    public bool playerSighted;
+
+    public bool atPlayerLastLocation;
+    public int nearbyRoomTripped = -1;
+    public bool arrivedAtRoom;
     public Vector3 playerLastSighting;
+    public Vector3 playerLastLastSighting;
+
+    // Number of rooms the guard has checked to find the player
+    public int checkedRooms;
 
     public int patrolFrom;
     public int patrolTo;
 
-    private Path path;
+    public bool atPatrol;
+
+    public Path path;
     private GameObject player;
 
     // Decision Making
@@ -50,7 +68,7 @@ public class Guard : MonoBehaviour
         // Generate patrol path
         path = AStarPathFinding.FindPath(patrolFrom, patrolTo);
         path.CalcParams();
-        //path = AStarPathFinding.FindPath(0, 16);
+        //path = AStarPathFinding.FindPath(0, 27);
         //path.CalcParams();
         // Drawing path for debugging
         //path.DrawPath();
@@ -61,57 +79,40 @@ public class Guard : MonoBehaviour
     {
         if (playerInSight)
         {
-            Debug.Log("Player detected!!");
-
-            // Trigger alert state
+            //Debug.Log("Player detected!!");
+            GetComponentInChildren<AudioSource>().enabled = true;
+            playerLastSighting = player.transform.position;
+            GameObject.Find("Node (42)").transform.position = playerLastSighting;
         }
-
-        GuardActions(decisionMaking.currentAction);
-    }
-
-    public void GuardActions(string action)
-    {
-        switch (action)
+        else if(!playerInSight && !GetComponentInChildren<AudioSource>().isPlaying)
         {
-            case "patrol":
-                if(Patrol(patrolFrom, patrolTo))
-                {
-                    int temp = patrolFrom;
-                    patrolFrom = patrolTo;
-                    patrolTo = temp;
-                    path = AStarPathFinding.FindPath(patrolFrom, patrolTo);
-                    path.CalcParams();
-                }
-                break;
-            case "alarm":
-                break;
-            case "attack":
-                break;
-            case "wait":
-                break;
+            GetComponentInChildren<AudioSource>().enabled = false;
         }
+
+        // If player is nearby
+        if(Vector3.Distance(transform.position, player.transform.position) < 10)
+        {
+            playerNearby = true;
+        }
+        else
+        {
+            playerNearby = false;
+        }
+
+        //FollowPath(path, pathOffset);
+
+        //GuardActions(decisionMaking.currentAction);
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
         gameObject.transform.position += velocity * Time.fixedDeltaTime;
-        //gameObject.GetComponent<CharacterController>().SimpleMove(velocity);
         gameObject.transform.localEulerAngles = GetNewOrientation();
-        //gameObject.transform.localEulerAngles += rotation * Time.fixedDeltaTime;
 
         velocity += linear * Time.fixedDeltaTime;
 
         gameObject.GetComponentInChildren<Animator>().SetFloat("Forward", velocity.magnitude);
-        //rotation +=   angular * Time.fixedDeltaTime;
-
-        /*if(velocity.magnitude > maxSpeed)
-        {
-            velocity.Normalize();
-            velocity *= maxSpeed;
-        }*/
-
-        FollowPath(path, pathOffset);
     }
 
     private void OnTriggerStay(Collider other)
@@ -141,19 +142,24 @@ public class Guard : MonoBehaviour
                     {
                         playerInSight = true;
                         playerLastSighting = hit.collider.gameObject.transform.position;
+                        if (GetComponent<GuardDecisionMaking>().sm.currentState.action == "attack")
+                        {
+                            playerSighted = true;
+                        }
                     }
                 }
             }
         }
     }
 
-    bool FollowPath(Path path, float pathOffset)
+    public bool FollowPath(Path path, float pathOffset)
     {
         float currentParam;
         Vector3 futurePos = gameObject.transform.position + velocity * Time.fixedDeltaTime;
         currentParam = path.getParam(futurePos);
         float targetParam = currentParam + pathOffset;
         Vector3 targetPos = path.getPosition(targetParam);
+        //Debug.DrawLine(transform.position, targetPos, Color.magenta, 999);
         return Arrive(targetPos);
         //LookWhereYoureGoing();
     }
@@ -167,83 +173,19 @@ public class Guard : MonoBehaviour
         linear = linearCalc;
     }
 
-    void LookWhereYoureGoing()
-    {
-        if(velocity.magnitude == 0)
-        {
-            angular = Vector3.zero;
-            rotation = Vector3.zero;
-        }
-        else
-        {
-            Vector3 target = new Vector3(0, Mathf.Atan2(-velocity.x, velocity.z)*Mathf.Rad2Deg, 0);
-            //Debug.Log("Target: " + target);
-            Align(target);
-        }
-    }
-
-    void Align(Vector3 target)
-    {
-        Vector3 rotationCalc = target - gameObject.transform.localEulerAngles;
-        if(rotationCalc.y > 180)
-        {
-            rotationCalc.y -= 360;
-        }
-        if (rotationCalc.y < -180)
-        {
-            rotationCalc.y += 360;
-        }
-        rotation = rotationCalc;
-        Debug.Log(rotation);
-        float rotationSize = Mathf.Abs(rotationCalc.y);
-        Vector3 targetRotation;
-
-        //Debug.Log("rotationSize: " + rotationSize + " radiusRotate: " + radiusRotate);
-
-        if (rotationSize < radiusRotate)
-        {
-            angular = Vector3.zero;
-            rotation = Vector3.zero;
-        }
-        else
-        {
-            if(rotationSize > slowRadius)
-            {
-                targetRotation = new Vector3(0, maxRotation, 0);
-            }
-            else
-            {
-                targetRotation = new Vector3(0, maxRotation, 0) * rotationSize / slowRadiusRotate;
-            }
-
-            targetRotation *= rotationCalc.y / rotationSize; 
-
-            Debug.Log("TargetRotation: " + targetRotation);
-
-            Vector3 angularCalc = targetRotation - gameObject.transform.localEulerAngles;
-            angularCalc /= Time.fixedDeltaTime;
-
-            float angularAcceleration = Mathf.Abs(angularCalc.y);
-            if(angularAcceleration > maxAngularAcceleration)
-            {
-                angularCalc /= angularAcceleration;
-                angularCalc *= maxAngularAcceleration;
-            }
-
-            angular = angularCalc;
-        }
-    }
-
     bool Arrive(Vector3 target)
     {
         Vector3 direction = target - gameObject.transform.position;
-        float distance = direction.magnitude;
+        float distance = Vector3.Distance(transform.position, target);
 
         // If we are at target
         if (distance < radius)
         {
-            linear = Vector3.zero;
+            angular = Vector3.zero;
+            rotation = Vector3.zero;
             velocity = Vector3.zero;
+            linear = Vector3.zero;
+            //path = null;
             return true;
         }
         else
@@ -294,8 +236,83 @@ public class Guard : MonoBehaviour
         //path.DrawPath();
     }
 
-    private bool Patrol(int from, int to)
+    public void FindPathTo(int to)
+    {
+        path = AStarPathFinding.FindPath(FindClosestNode(), to);
+        path.CalcParams();
+        // Drawing path for debugging
+        //path.DrawPath();
+    }
+
+    public void FindPathToRoom(int room)
+    {
+        int chosenNode = -1;
+        //List<int> possibleNodes;
+        switch (room)
+        {
+            case 0:
+                //possibleNodes = new List<int>() {2,3,4};
+                //chosenNode = possibleNodes[Random.Range(0, 3)];
+                chosenNode = 27;
+                break;
+            case 1:
+                //possibleNodes = new List<int>() { 14, 44 };
+                //chosenNode = possibleNodes[Random.Range(0, 2)];
+                chosenNode = 28;
+                break;
+            case 2:
+                //possibleNodes = new List<int>() { 11, 12, 25, 26 };
+                //chosenNode = possibleNodes[Random.Range(0, 4)];
+                chosenNode = 29;
+                break;
+            case 3:
+                //possibleNodes = new List<int>() { 14, 43 };
+                //chosenNode = possibleNodes[Random.Range(0, 4)];
+                chosenNode = 32;
+                break;
+            case 4:
+                //possibleNodes = new List<int>() { 16, 45, 46, 47 };
+                //chosenNode = possibleNodes[Random.Range(0, 4)];
+                chosenNode = 31;
+                break;
+            case 5:
+                //possibleNodes = new List<int>() { 16, 45, 46, 47 };
+                //chosenNode = possibleNodes[Random.Range(0, 4)];
+                chosenNode = 30;
+                break;
+        }
+        path = AStarPathFinding.FindPath(FindClosestNode(), chosenNode);
+        path.CalcParams();
+        // Drawing path for debugging
+        //path.DrawPath();
+    }
+
+    public int FindClosestNode()
+    {
+        int closestNode = -1;
+        float closestDistance = float.MaxValue;
+        foreach(Transform child in GameObject.Find("PathNodes").transform)
+        {
+            float distance = Vector3.Distance(transform.position, child.transform.position);
+            if(distance < closestDistance)
+            {
+                closestDistance = distance;
+                string name = child.name;
+                closestNode = int.Parse(name.Substring(name.IndexOf("(") + 1, name.IndexOf(")") - name.IndexOf("(") - 1));
+            }
+        }
+        //Debug.Log("Closest Node: " + closestNode);
+        return closestNode;
+    }
+
+    public void ChasePlayer()
+    {
+        Arrive(player.transform.position);
+    }
+
+    public bool Patrol()
     {
         return FollowPath(path, pathOffset);
     }
+
 }
