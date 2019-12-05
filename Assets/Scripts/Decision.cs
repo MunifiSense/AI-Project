@@ -140,9 +140,10 @@ public class AggressiveDecision : Decision {
     }
 }
 
+
 // Is there backup nearby?
-public class BackupDecision : Decision {
-    public BackupDecision(Guard guard) : base(guard)
+public class ArrivedDecision : Decision {
+    public ArrivedDecision(Guard guard) : base(guard)
     {
         this.guard = guard;
         this.trueNode = null;
@@ -151,8 +152,8 @@ public class BackupDecision : Decision {
 
     public override Decision GetBranch()
     {
-        //Debug.Log("Is there backup?");
-        if (guard.haveBackup)
+        //Debug.Log("Reached backup location?");
+        if (guard.atPlayerLastLocation)
         {
             return trueNode;
         }
@@ -184,6 +185,67 @@ public class AlarmDecision : Decision
     {
         //Debug.Log("Is the alarm triggered?");
         if (GameObject.Find("GameState").GetComponent<GameState>().Alarm())
+        {
+            return trueNode;
+        }
+        return falseNode;
+    }
+
+    public override Decision MakeDecision()
+    {
+        Decision branch = GetBranch();
+        if (branch is null)
+        {
+            return branch;
+        }
+        return branch.MakeDecision();
+    }
+}
+
+// Are we at the room?
+public class RoomDecision : Decision {
+    public RoomDecision(Guard guard) : base(guard)
+    {
+        this.guard = guard;
+        this.trueNode = null;
+        this.falseNode = null;
+    }
+
+    public override Decision GetBranch()
+    {
+        //Debug.Log("Is the alarm triggered?");
+        if (guard.arrivedAtRoom)
+        {
+            //Debug.Log("AT ROOM");
+            return trueNode;
+        }
+        return falseNode;
+    }
+
+    public override Decision MakeDecision()
+    {
+        Decision branch = GetBranch();
+        if (branch is null)
+        {
+            return branch;
+        }
+        return branch.MakeDecision();
+    }
+}
+
+// Are we at the room?
+public class LaserDecision : Decision {
+    public LaserDecision(Guard guard) : base(guard)
+    {
+        this.guard = guard;
+        this.trueNode = null;
+        this.falseNode = null;
+    }
+
+    public override Decision GetBranch()
+    {
+        //Debug.Log("Is the alarm triggered?");
+        if (guard.nearbyRoomTripped > -1)
         {
             return trueNode;
         }

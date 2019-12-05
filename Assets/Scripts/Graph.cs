@@ -27,7 +27,7 @@ public class Graph
                 if (!Physics.Raycast(child.position, node.position - child.position, distance, mask, QueryTriggerInteraction.Ignore))
                 {
                     //Debug.DrawLine(child.position, node.position, Color.yellow, 999);
-                    localConnections.Add(new Connection(distance, num, getIndex(node.name)));
+                    localConnections.Add(new Connection(distance, num, getIndex(node.gameObject.name)));
                     //Debug.Log("Did not hit a wall");
                 }
                 else

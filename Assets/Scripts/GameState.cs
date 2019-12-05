@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class GameState : MonoBehaviour
 {
-    private bool alarmTriggered;
+    public GameObject alarm;
+    public bool alarmTriggered;
     // Start is called before the first frame update
     void Start()
     {
@@ -23,10 +24,12 @@ public class GameState : MonoBehaviour
     public void StopAlarm()
     {
         alarmTriggered = false;
+        alarm.SetActive(false);
     }
 
     public void StartAlarm()
     {
         alarmTriggered = true;
+        alarm.SetActive(true);
     }
 }
