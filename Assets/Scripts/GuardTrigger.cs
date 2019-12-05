@@ -26,7 +26,10 @@ public class GuardTrigger : MonoBehaviour
 
         if(other.tag == "Player")
         {
-
+            GameObject.FindGameObjectWithTag("Player").gameObject.transform.position = 
+                GameObject.Find("PlayerSpawn").gameObject.transform.position;
+            GameObject.FindGameObjectWithTag("Player").gameObject.transform.rotation =
+                GameObject.Find("PlayerSpawn").gameObject.transform.rotation;
         }
     }
 }
